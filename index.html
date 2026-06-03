@@ -1,147 +1,275 @@
 <!DOCTYPE html>
-<html lang="en-us">
-<!--comment-->
+<html lang="en">
 <head>
-    <base href="https://cdn.jsdelivr.net/gh/genizy/web-port@main/people-playground/">
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | People Playground</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-        }
-
-        #unity-container {
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote Database</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0: #0b1220;
+  --bg-1: #0f172a;
+  --card: rgba(255,255,255,0.04);
+  --muted: #9aa6bf;
+  --accent-1: #60a5fa;
+  --accent-2: #8b5cf6;
+  --glass: rgba(255,255,255,0.04);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background:linear-gradient(180deg,var(--bg-0),var(--bg-1));
+  color: #e6eef8;
+  display:flex;
+  gap:24px;
+  padding:28px;
+  align-items:flex-start;
+}
+.sidebar{
+  width:260px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:16px;
+  padding:20px;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+  backdrop-filter: blur(6px);
+}
+.sidebar h2{margin:0 0 12px 0;font-weight:700;letter-spacing:0.2px}
+.navbtn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  margin:10px 0;
+  padding:12px 14px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.navbtn:hover{transform:translateX(6px);color:var(--accent-1)}
+.main{
+  flex:1;
+  min-width:0;
+}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:16px;
+  box-shadow: 0 6px 30px rgba(2,6,23,0.55);
+}
+input{padding:12px 14px;width:100%;max-width:680px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+input::placeholder{color:var(--muted)}
+button.action{padding:10px 14px;margin:6px;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:white;font-weight:600;box-shadow:0 6px 18px rgba(99,102,241,0.12);transition:transform .12s ease}
+button.action:hover{transform:translateY(-4px)}
+.quoteCard{margin:12px 0;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+.speakerBtn{display:block;margin:8px 0;padding:10px;border:none;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;text-align:left}
+.speakerBtn:hover{color:var(--accent-2);transform:translateX(6px)}
+h2{margin:0 0 8px 0}
+h3{margin:8px 0}
+.controls{display:flex;gap:8px;align-items:center}
+.meta{color:var(--muted);font-size:0.9rem}
+@media (max-width:880px){
+  body{flex-direction:column;padding:16px}
+  .sidebar{width:100%;display:flex;flex-wrap:wrap}
+  .main{width:100%}
+}
+</style>
 </head>
-
 <body>
-    <div id="loading-text" style="color: black; font-size: 48px; font-family: cursive; text-align: center; margin-top: 20px;">LOADING...</div>
-    <div id="unity-container" class="unity-desktop" hidden>
-        <canvas id="unity-canvas" tabindex="-1"></canvas>
-        <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-                <div id="unity-progress-bar-full"></div>
-            </div>
-        </div>
-        <div id="unity-warning"> </div>
-    </div>
-    <script>
-        var container = document.querySelector("#unity-container");
-        var canvas = document.querySelector("#unity-canvas");
-        var loadingBar = document.querySelector("#unity-loading-bar");
-        var progressBarFull = document.querySelector("#unity-progress-bar-full");
-        var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-        var warningBanner = document.querySelector("#unity-warning");
+<div class="sidebar">
+<h2>Quote Database</h2>
+<button class="navbtn" onclick="showPage('quiz')">🏠 Quote Quiz</button>
+<button class="navbtn" onclick="showPage('random')">🎲 Random Quote</button>
+<button class="navbtn" onclick="showPage('browse')">📚 Browse Quotes</button>
+<button class="navbtn" onclick="showPage('stats')">📊 Statistics</button>
+</div>
 
-        function unityShowBanner(msg, type) {
-            function updateBannerVisibility() {
-                warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-            }
-            var div = document.createElement('div');
-            div.innerHTML = msg;
-            warningBanner.appendChild(div);
-            if (type == 'error') div.style = 'background: red; padding: 10px;';
-            else {
-                if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-                setTimeout(function () {
-                    warningBanner.removeChild(div);
-                    updateBannerVisibility();
-                }, 5000);
-            }
-            updateBannerVisibility();
-        }
+<div class="main">
+<div id="content">Loading...</div>
+</div>
 
-        function mergeFiles(fileParts) {
-            return new Promise((resolve, reject) => {
-                let buffers = [];
+<script>
+let quotes=[];
+let currentQuote=null;
+let score=0, streak=0;
+let unused=[];
+const content = document.getElementById('content');
 
-                function fetchPart(index) {
-                    if (index >= fileParts.length) {
-                        let mergedBlob = new Blob(buffers);
-                        let mergedFileUrl = URL.createObjectURL(mergedBlob);
-                        resolve(mergedFileUrl);
-                        return;
-                    }
-                    fetch(fileParts[index]).then((response) => response.arrayBuffer()).then((data) => {
-                        buffers.push(data);
-                        fetchPart(index + 1);
-                    }).catch(reject);
-                }
-                fetchPart(0);
-            });
-        }
+async function loadQuotes(){
+ try{
+  const resp = await fetch('quotes.txt');
+  if(!resp.ok){
+    throw new Error(`HTTP ${resp.status}`);
+  }
+  const txt = await resp.text();
+  const lines = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 
-        function getParts(file, start, end) {
-            let parts = [];
-            for (let i = start; i <= end; i++) {
-                parts.push(file + ".part" + i);
-            }
-            return parts;
-        }
-        Promise.all([
-            mergeFiles(getParts("Build/PPG.wasm", 1, 3)),
-            mergeFiles(getParts("Build/PPG.data", 1, 6))
-        ]).then(([wasmUrl, dataUrl]) => {
-            container.hidden = false;
-            var buildUrl = "Build";
-            var loaderUrl = buildUrl + "/PPG.loader.js";
-            var config = {
-                dataUrl: dataUrl,
-                frameworkUrl: buildUrl + "/PPG.framework.js",
-                codeUrl: wasmUrl,
-                streamingAssetsUrl: "StreamingAssets",
-                companyName: "Studio Minus",
-                productName: "People Playground",
-                productVersion: "0"
-            };
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                var meta = document.createElement('meta');
-                meta.name = 'viewport';
-                meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-                document.getElementsByTagName('head')[0].appendChild(meta);
-                container.className = "unity-mobile";
-                canvas.className = "unity-mobile";
-            } else {
-                function resizeCanvas() {
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    canvas.style.width = window.innerWidth + "px";
-                    canvas.style.height = window.innerHeight + "px";
-                }
-                resizeCanvas();
-                window.addEventListener('resize', resizeCanvas);
-            }
-            loadingBar.style.display = "block";
-            var script = document.createElement("script");
-            script.src = loaderUrl;
-            script.onload = () => {
-                createUnityInstance(canvas, config, (progress) => {
-                    progressBarFull.style.width = 100 * progress + "%";
-                }).then((unityInstance) => {
-                    loadingBar.style.display = "none";
-                    document.querySelector("#loading-text").remove();
-                }).catch((message) => {
-                    alert(message);
-                });
-            };
-            document.body.appendChild(script);
-        });
-    </script>
+  quotes = [];
+  lines.forEach((line,i)=>{
+    const m = line.match(/^(?:\d+\.\s*)?["“](.*?)["”]\s*-\s*(.+?)(?:\s+(\d{4}))?$/);
+    if(m){
+      quotes.push({id:i+1,quote:m[1],author:m[2],year:m[3]||""});
+    }
+  });
+
+  if(quotes.length === 0){
+    document.getElementById('content').innerHTML = `
+      <div class="card">
+        <h2>No valid quotes found</h2>
+        <p>Make sure <strong>quotes.txt</strong> is next to this HTML file and uses the format:<br>“Quote” - Author 2025</p>
+      </div>`;
+    return;
+  }
+
+  unused = Object.keys(quotes).map(k=>Number(k));
+  shuffle(unused);
+  showPage('quiz');
+ }
+ catch(err){
+  console.error('Failed to load quotes.txt', err);
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <h2>Could not load quotes.txt</h2>
+      <p style="color:#fca5a5">${err.message || 'Fetch failed'}</p>
+      <p>When opening this page from the file system (file://), some browsers block automatic file requests. Start a local server (for example, run <code>npx http-server</code> or use VS Code Live Server) or place this app on a web server.</p>
+    </div>`;
+ }
+}
+
+function shuffle(a){
+ for(let i=a.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [a[i],a[j]]=[a[j],a[i]];
+ }
+}
+
+function nextQuizQuote(){
+ if(unused.length===0){
+   unused=[...quotes.keys()];
+   shuffle(unused);
+ }
+ currentQuote=quotes[unused.pop()];
+}
+
+function showPage(page){
+ if(page==='quiz') renderQuiz();
+ if(page==='random') renderRandom();
+ if(page==='browse') renderBrowse();
+ if(page==='stats') renderStats();
+}
+
+function renderQuiz(){
+ nextQuizQuote();
+    content.innerHTML=`
+ <div class="card">
+ <h2>Quote Quiz</h2>
+ <div class="meta">Score: ${score} &nbsp; | &nbsp; Streak: ${streak}</div>
+ <blockquote style="margin:18px 0 12px 0;font-size:1.25rem;line-height:1.4;color:#eaf2ff">“${currentQuote.quote}”</blockquote>
+ <div class="controls">
+   <input id="guess" placeholder="Who said it?">
+   <button class="action" onclick="checkGuess()">Submit</button>
+ </div>
+ <div id="msg" class="meta" style="margin-top:12px"></div>
+ </div>`;
+}
+
+function checkGuess(){
+ const g=document.getElementById('guess').value.trim().toLowerCase();
+ const a=currentQuote.author.toLowerCase();
+ if(g===a){
+   score++; streak++;
+   renderQuiz();
+ } else {
+   streak=0;
+   document.getElementById('msg').innerHTML="Incorrect. Try again.";
+ }
+}
+
+function randomQuote(){
+ const q=quotes[Math.floor(Math.random()*quotes.length)];
+ document.getElementById('randomArea').innerHTML=
+ `<div class="quoteCard"><div style="display:flex;justify-content:space-between"><div><b>#${q.id}</b></div><div class="meta">${q.year || ''}</div></div><blockquote style="margin:8px 0;color:#eaf2ff">“${q.quote}”</blockquote><div class="meta">— ${q.author}</div></div>`;
+ window.currentRandom=q;
+}
+
+function speakQuote(){
+ if(!window.currentRandom) return;
+ speechSynthesis.speak(new SpeechSynthesisUtterance(window.currentRandom.quote));
+}
+
+function renderRandom(){
+ content.innerHTML=`
+ <div class="card">
+ <h2>Random Quote</h2>
+ <button class="action" onclick="randomQuote()">New Quote</button>
+ <button class="action" onclick="speakQuote()">🔊 Read Aloud</button>
+ <div id="randomArea"></div>
+ </div>`;
+ randomQuote();
+}
+
+function renderBrowse(){
+ let speakers={};
+ quotes.forEach(q=>speakers[q.author]=(speakers[q.author]||0)+1);
+
+ let speakerHtml=Object.entries(speakers)
+   .sort((a,b)=>b[1]-a[1])
+   .map(([s,c])=>`<button class="speakerBtn" onclick="filterSpeaker('${s.replace(/'/g,"\\'")}')">${s} (${c})</button>`)
+   .join("");
+
+ content.innerHTML=`
+ <div class="card">
+ <h2>Browse Quotes</h2>
+ <input id="search" placeholder="Search quotes..." oninput="searchQuotes()">
+ <h3>Speakers</h3>
+ ${speakerHtml}
+ <hr>
+ <div id="quoteList"></div>
+ </div>`;
+ displayQuotes(quotes);
+}
+
+function displayQuotes(arr){
+ document.getElementById('quoteList').innerHTML=arr.map(q=>
+ `<div class="quoteCard">
+ <div style="display:flex;justify-content:space-between"><div><b>#${q.id}</b></div><div class="meta">${q.year || ''}</div></div>
+ <blockquote style="margin:8px 0;color:#eaf2ff">“${q.quote}”</blockquote>
+ <div class="meta">— ${q.author}</div>
+ </div>`).join("");
+}
+
+function searchQuotes(){
+ const t=document.getElementById('search').value.toLowerCase();
+ displayQuotes(quotes.filter(q=>
+ q.quote.toLowerCase().includes(t)||
+ q.author.toLowerCase().includes(t)||
+ String(q.year).includes(t)
+ ));
+}
+
+function filterSpeaker(name){
+ displayQuotes(quotes.filter(q=>q.author===name));
+}
+
+function renderStats(){
+ let speakers={};
+ quotes.forEach(q=>speakers[q.author]=(speakers[q.author]||0)+1);
+ let top=Object.entries(speakers).sort((a,b)=>b[1]-a[1])
+ .map(x=>`<li>${x[0]} — ${x[1]}</li>`).join("");
+ content.innerHTML=`
+ <div class="card">
+ <h2>Statistics</h2>
+ <p>Total Quotes: ${quotes.length}</p>
+ <ol>${top}</ol>
+ </div>`;
+}
+
+loadQuotes();
+</script>
 </body>
-
 </html>
